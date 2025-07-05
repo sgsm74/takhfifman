@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:takhfifman/screens/splash_screen.dart';
 import 'models/discount_code.dart';
-import 'screens/home_screen.dart';
 import 'theme.dart';
 
 void main() async {

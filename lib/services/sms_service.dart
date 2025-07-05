@@ -1,4 +1,5 @@
-import 'package:telephony/telephony.dart';
+import 'package:another_telephony/telephony.dart';
+
 import '../models/discount_code.dart';
 
 class SmsService {
@@ -18,6 +19,7 @@ class SmsService {
 
       // فقط پیامک‌هایی که احتمالاً کد دارن رو بررسی کن
       if (_looksLikeCoupon(body)) {
+        print(sms.body);
         final code = _extractCode(body);
         final brand = _detectBrand(body);
         final minPurchase = _extractMinPurchase(body);
@@ -45,7 +47,12 @@ class SmsService {
   }
 
   bool _looksLikeCoupon(String body) {
-    return body.contains('%') || body.contains('تخفیف') || body.contains('OFF');
+    return body.contains('%') ||
+        body.contains('تخفیف') ||
+        body.contains('OFF') ||
+        body.contains('کد:') ||
+        body.contains('هدیه') ||
+        body.contains('کف سبد');
   }
 
   String? _extractCode(String text) {
@@ -57,6 +64,7 @@ class SmsService {
     if (text.contains('دیجی')) return 'دیجی‌کالا';
     if (text.contains('اسنپ')) return 'اسنپ';
     if (text.contains('علی‌بابا')) return 'علی‌بابا';
+    if (text.contains('تپسی‌شاپ') || text.contains('تپسی شاپ')) return 'تپسی‌شاپ';
     // بقیه برندها رو هم اضافه کن
     return 'نامشخص';
   }
