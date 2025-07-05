@@ -44,110 +44,119 @@ class _HomeScreenState extends State<HomeScreen> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
-        appBar: AppBar(
-          title: Text('تخفیف من', style: TextStyle(fontFamily: 'IranSans')),
-          actions: [
-            IconButton(
-              onPressed: _loading ? null : _scanSms,
-              icon: _loading ? const CircularProgressIndicator(strokeWidth: 2) : const Icon(Icons.refresh),
-            ),
-            //IconButton(icon: const Icon(Icons.brightness_6), onPressed: widget.toggleTheme),
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.sort),
-              onSelected: (value) => setState(() => _sortMode = value),
-              itemBuilder:
-                  (context) => [
-                    const PopupMenuItem(value: 'date', child: Text('مرتب بر اساس تاریخ دریافت')),
-                    const PopupMenuItem(value: 'exp', child: Text('مرتب بر اساس تاریخ انقضا')),
-                  ],
-            ),
-          ],
-          // bottom: PreferredSize(
-          //   preferredSize: const Size.fromHeight(48),
-          //   child: Padding(
-          //     padding: const EdgeInsets.all(8),
-          //     child: TextField(
-          //       decoration: const InputDecoration(
-          //         hintText: 'جستجو کد یا برند...',
-          //         filled: true,
-          //         fillColor: Colors.white,
-          //         border: OutlineInputBorder(),
-          //         contentPadding: EdgeInsets.symmetric(horizontal: 12),
-          //       ),
-          //       onChanged: (value) => setState(() => _search = value),
-          //     ),
-          //   ),
-          // ),
-        ),
-        body: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: ValueListenableBuilder(
-            valueListenable: Hive.box<DiscountCode>('codes').listenable(),
-            builder: (context, Box<DiscountCode> box, _) {
-              var codes = box.values.toList();
-
-              if (_search.isNotEmpty) {
-                codes =
-                    codes
-                        .where(
-                          (c) =>
-                              c.code.toLowerCase().contains(_search.toLowerCase()) || c.brand.toLowerCase().contains(_search.toLowerCase()),
-                        )
-                        .toList();
-              }
-
-              if (_sortMode == 'date') {
-                codes.sort((a, b) => b.receivedAt.compareTo(a.receivedAt));
-              } else if (_sortMode == 'exp') {
-                codes.sort((a, b) {
-                  final aExp = a.expiresAt ?? DateTime(2100);
-                  final bExp = b.expiresAt ?? DateTime(2100);
-                  return aExp.compareTo(bExp);
-                });
-              }
-
-              if (codes.isEmpty) {
-                return const Center(child: Text('چیزی پیدا نشد'));
-              }
-
-              return ListView.builder(
-                itemCount: codes.length,
-                itemBuilder: (context, index) {
-                  final code = codes[index];
-                  final isExpired = code.isExpired;
-
-                  return Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      side: BorderSide(color: Color(0xFF1A73E8).withValues(alpha: 0.1), width: 1),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Image.asset('assets/images/brands/digikala.png', width: 64, height: 64),
-                              Text(code.code),
-                              Spacer(),
-                              IconButton(
-                                icon: const Icon(Icons.copy),
-                                onPressed: () {
-                                  Clipboard.setData(ClipboardData(text: code.code));
-                                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('کد کپی شد!')));
-                                },
-                              ),
-                            ],
-                          ),
-                          Text('${code.discountDetail}'),
+        body: IndexedStack(
+          index: _selectedIndex,
+          children: [
+            Scaffold(
+              appBar: AppBar(
+                title: Text('تخفیف من', style: TextStyle(fontFamily: 'IranSans')),
+                actions: [
+                  IconButton(
+                    onPressed: _loading ? null : _scanSms,
+                    icon: _loading ? const CircularProgressIndicator(strokeWidth: 2) : const Icon(Icons.refresh),
+                  ),
+                  //IconButton(icon: const Icon(Icons.brightness_6), onPressed: widget.toggleTheme),
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.sort),
+                    onSelected: (value) => setState(() => _sortMode = value),
+                    itemBuilder:
+                        (context) => [
+                          const PopupMenuItem(value: 'date', child: Text('مرتب بر اساس تاریخ دریافت')),
+                          const PopupMenuItem(value: 'exp', child: Text('مرتب بر اساس تاریخ انقضا')),
                         ],
-                      ),
-                    ),
-                  );
-                },
-              );
-            },
-          ),
+                  ),
+                ],
+                // bottom: PreferredSize(
+                //   preferredSize: const Size.fromHeight(48),
+                //   child: Padding(
+                //     padding: const EdgeInsets.all(8),
+                //     child: TextField(
+                //       decoration: const InputDecoration(
+                //         hintText: 'جستجو کد یا برند...',
+                //         filled: true,
+                //         fillColor: Colors.white,
+                //         border: OutlineInputBorder(),
+                //         contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                //       ),
+                //       onChanged: (value) => setState(() => _search = value),
+                //     ),
+                //   ),
+                // ),
+              ),
+              body: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: ValueListenableBuilder(
+                  valueListenable: Hive.box<DiscountCode>('codes').listenable(),
+                  builder: (context, Box<DiscountCode> box, _) {
+                    var codes = box.values.toList();
+
+                    if (_search.isNotEmpty) {
+                      codes =
+                          codes
+                              .where(
+                                (c) =>
+                                    c.code.toLowerCase().contains(_search.toLowerCase()) ||
+                                    c.brand.toLowerCase().contains(_search.toLowerCase()),
+                              )
+                              .toList();
+                    }
+
+                    if (_sortMode == 'date') {
+                      codes.sort((a, b) => b.receivedAt.compareTo(a.receivedAt));
+                    } else if (_sortMode == 'exp') {
+                      codes.sort((a, b) {
+                        final aExp = a.expiresAt ?? DateTime(2100);
+                        final bExp = b.expiresAt ?? DateTime(2100);
+                        return aExp.compareTo(bExp);
+                      });
+                    }
+
+                    if (codes.isEmpty) {
+                      return const Center(child: Text('چیزی پیدا نشد'));
+                    }
+
+                    return ListView.builder(
+                      itemCount: codes.length,
+                      itemBuilder: (context, index) {
+                        final code = codes[index];
+                        final isExpired = code.isExpired;
+
+                        return Card(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            side: BorderSide(color: Color(0xFF1A73E8).withValues(alpha: 0.1), width: 1),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    Image.asset('assets/images/brands/digikala.png', width: 64, height: 64),
+                                    Text(code.code),
+                                    Spacer(),
+                                    IconButton(
+                                      icon: const Icon(Icons.copy),
+                                      onPressed: () {
+                                        Clipboard.setData(ClipboardData(text: code.code));
+                                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('کد کپی شد!')));
+                                      },
+                                    ),
+                                  ],
+                                ),
+                                Text('${code.discountDetail}'),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ),
+            BrandScreen(),
+          ],
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
@@ -158,12 +167,9 @@ class _HomeScreenState extends State<HomeScreen> {
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _selectedIndex,
           onTap: (value) {
-            _selectedIndex = value;
-            if (value == 1) {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => const BrandScreen()));
-            } else {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => HomeScreen(toggleTheme: widget.toggleTheme)));
-            }
+            setState(() {
+              _selectedIndex = value;
+            });
           },
           items: [
             BottomNavigationBarItem(icon: Icon(Icons.home), label: 'صفحه اصلی'),
